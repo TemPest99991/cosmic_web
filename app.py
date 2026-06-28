@@ -207,8 +207,7 @@ def main() -> None:
         with right:
             render_absorption(data)
 
-        st.divider()
-        render_angular(data)
+       
         st.divider()
         render_system(data)
 
