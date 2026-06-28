@@ -174,35 +174,6 @@ def render_absorption(data: DashboardData) -> None:
     st.plotly_chart(fig, width="stretch")
 
 
-def render_angular(data: DashboardData) -> None:
-    st.header("Angular Dependence")
-    angular = data.angular
-
-    if angular.empty:
-        st.info("No angular-dependence data available yet.")
-        return
-
-    fig = px.line(
-        angular,
-        x="angle_deg",
-        y="corrected_rate",
-        markers=True,
-        labels={
-            "angle_deg": "Detector angle (degrees)",
-            "corrected_rate": "Corrected count rate",
-        },
-    )
-    fig.add_scatter(
-        x=angular["angle_deg"],
-        y=angular["cos2_fit"],
-        mode="lines",
-        name="cos^2 fit",
-        line=dict(color="#111827", width=3),
-    )
-    fig.update_layout(height=420, margin=dict(l=8, r=8, t=24, b=8))
-    st.plotly_chart(fig, width="stretch")
-
-
 def render_system(data: DashboardData) -> None:
     st.header("System Information")
     cols = st.columns(4)
