@@ -1,0 +1,11 @@
+{
+  "current_log_file": "C:\\Cosmic Ray\\6_clean.txt",
+  "malformed_records": 3396,
+  "exact_duplicate_records": 244,
+  "parsed_events": 20470956,
+  "channel_rows": 20470956,
+  "last_upload": "2026-06-28T00:11:19+00:00",
+  "first_data_timestamp": "2026-06-10T15:19:01+00:00",
+  "last_data_timestamp": "2026-06-16T15:20:57+00:00",
+  "clock_tick_us": 0.024
+}
