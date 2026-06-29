@@ -149,29 +149,92 @@ def render_muon_lifetime(data: DashboardData) -> None:
         st.metric("Difference", f"{weighted_mean - 2.20:+.2f} us")
 
 
-def render_absorption(data: DashboardData) -> None:
-    st.header("Absorption")
-    absorption = data.absorption
+def render_shower(data: DashboardData) -> None:
+    st.header("Shower Experiment")
+    shower = data.shower
 
-    if absorption.empty:
-        st.info("No absorption data available yet.")
+    if shower.empty:
+        st.info("No shower-coincidence data available yet.")
         return
 
-    fig = px.scatter(
-        absorption,
-        x="thickness_cm",
+    shower = shower.copy()
+    shower["timestamp"] = pd.to_datetime(shower["timestamp"], utc=True, errors="coerce")
+    shower = shower.dropna(subset=["timestamp"])
+    shower["coincidence"] = shower["multiplicity"].map(
+        {
+            2: "2 detectors",
+            3: "3 detectors",
+            4: "4 detectors",
+        }
+    )
+
+    totals = (
+        shower.groupby("multiplicity", as_index=False)
+        .agg(
+            observed_count=("observed_count", "sum"),
+            random_expected_count=("random_expected_count", "sum"),
+        )
+        .sort_values("multiplicity")
+    )
+    shower_candidates = int(totals["observed_count"].sum())
+    high_confidence = int(totals.loc[totals["multiplicity"] >= 3, "observed_count"].sum())
+    four_fold = int(totals.loc[totals["multiplicity"] == 4, "observed_count"].sum())
+    expected_total = float(totals["random_expected_count"].sum())
+    ratio = shower_candidates / expected_total if expected_total > 0 else None
+
+    cols = st.columns(4)
+    with cols[0]:
+        st.metric("2+ detector events", f"{shower_candidates:,}")
+    with cols[1]:
+        st.metric("3+ detector events", f"{high_confidence:,}")
+    with cols[2]:
+        st.metric("4-detector events", f"{four_fold:,}")
+    with cols[3]:
+        ratio_text = f"{ratio:,.0f}x" if ratio is not None else "n/a"
+        st.metric("Observed / random", ratio_text)
+
+    fig = px.line(
+        shower,
+        x="timestamp",
         y="rate_per_min",
-        color="material",
-        error_y="uncertainty",
+        color="coincidence",
         labels={
-            "thickness_cm": "Absorber thickness (cm)",
-            "rate_per_min": "Count rate per minute",
-            "material": "Material",
+            "timestamp": "Time",
+            "rate_per_min": "Coincidences per minute",
+            "coincidence": "Coincidence",
         },
     )
-    fig.update_traces(marker=dict(size=10))
-    fig.update_layout(height=420, margin=dict(l=8, r=8, t=24, b=8))
+    fig.update_layout(height=360, margin=dict(l=8, r=8, t=24, b=8), legend_title_text="")
     st.plotly_chart(fig, width="stretch")
+
+    comparison = totals.melt(
+        id_vars="multiplicity",
+        value_vars=["observed_count", "random_expected_count"],
+        var_name="kind",
+        value_name="count",
+    )
+    comparison["kind"] = comparison["kind"].map(
+        {
+            "observed_count": "Observed",
+            "random_expected_count": "Random estimate",
+        }
+    )
+    comparison["coincidence"] = comparison["multiplicity"].astype(str) + " detectors"
+    bar = px.bar(
+        comparison,
+        x="coincidence",
+        y="count",
+        color="kind",
+        barmode="group",
+        log_y=True,
+        labels={
+            "coincidence": "Coincidence type",
+            "count": "Events, log scale",
+            "kind": "",
+        },
+    )
+    bar.update_layout(height=330, margin=dict(l=8, r=8, t=24, b=8))
+    st.plotly_chart(bar, width="stretch")
 
 
 def render_system(data: DashboardData) -> None:
