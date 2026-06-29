@@ -292,10 +292,10 @@ def main() -> None:
     left, right = st.columns(2)
 
     with left:
-        render_muon_lifetime(initial_data)
+        render_muon_lifetime(data)
 
     with right:
-        render_absorption(initial_data)
+        render_shower(data)
 
     st.divider()
 
