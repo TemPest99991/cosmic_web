@@ -192,28 +192,53 @@ def main() -> None:
     st.sidebar.caption("The page refreshes while it is open.")
     st.sidebar.toggle("Use sample data fallback", value=True, key="sample_fallback")
 
-    @st.fragment(run_every=timedelta(seconds=refresh_seconds))
-    def dashboard_body() -> None:
-        data = load_dashboard_data(use_sample_fallback=st.session_state.sample_fallback)
+    def get_current_data():
+    return load_dashboard_data(
+        use_sample_fallback=st.session_state.sample_fallback
+    )
 
-        render_header(data)
-        st.divider()
-        render_scintillators(data)
-        st.divider()
 
-        left, right = st.columns(2)
-        with left:
-            render_muon_lifetime(data)
-        with right:
-            render_absorption(data)
+# Load once for sections that do not need constant refreshing
+initial_data = get_current_data()
 
-       
-        st.divider()
-        render_system(data)
+render_header(initial_data)
+st.divider()
 
-        st.caption(f"Refreshing every {refresh_seconds} seconds.")
 
-    dashboard_body()
+# Only the live scintillator section refreshes automatically
+@st.fragment(run_every=timedelta(seconds=refresh_seconds))
+def live_scintillator_section() -> None:
+    data = get_current_data()
+    render_scintillators(data)
+
+
+live_scintillator_section()
+
+st.divider()
+
+
+# These sections stay fixed and should no longer throw you
+# back to the top while you are viewing them.
+left, right = st.columns(2)
+
+with left:
+    render_muon_lifetime(initial_data)
+
+with right:
+    render_absorption(initial_data)
+
+st.divider()
+
+
+# System information can refresh separately
+@st.fragment(run_every=timedelta(seconds=refresh_seconds))
+def live_system_section() -> None:
+    data = get_current_data()
+    render_system(data)
+    st.caption(f"Refreshing every {refresh_seconds} seconds.")
+
+
+live_system_section()
 
 
 if __name__ == "__main__":
