@@ -188,32 +188,65 @@ def render_system(data: DashboardData) -> None:
 
 
 def main() -> None:
-    refresh_seconds = st.sidebar.slider("Refresh interval", 5, 120, 30)
-    st.sidebar.caption("The page refreshes while it is open.")
-    st.sidebar.toggle("Use sample data fallback", value=True, key="sample_fallback")
-
-    def get_current_data():
-    return load_dashboard_data(
-        use_sample_fallback=st.session_state.sample_fallback
+    refresh_seconds = st.sidebar.slider(
+        "Refresh interval",
+        min_value=5,
+        max_value=120,
+        value=30,
     )
 
+    st.sidebar.caption("Live sections refresh while this page is open.")
 
-# Load once for sections that do not need constant refreshing
-initial_data = get_current_data()
+    st.sidebar.toggle(
+        "Use sample data fallback",
+        value=True,
+        key="sample_fallback",
+    )
 
-render_header(initial_data)
-st.divider()
+    def get_data() -> DashboardData:
+        return load_dashboard_data(
+            use_sample_fallback=st.session_state.sample_fallback
+        )
 
+    # Load the data once for sections that do not need constant refreshing.
+    initial_data = get_data()
 
-# Only the live scintillator section refreshes automatically
-@st.fragment(run_every=timedelta(seconds=refresh_seconds))
-def live_scintillator_section() -> None:
-    data = get_current_data()
-    render_scintillators(data)
+    # Static header
+    render_header(initial_data)
+    st.divider()
 
+    # Only the scintillator section refreshes automatically.
+    @st.fragment(run_every=timedelta(seconds=refresh_seconds))
+    def live_scintillator_section() -> None:
+        data = get_data()
+        render_scintillators(data)
 
-live_scintillator_section()
+    live_scintillator_section()
 
+    st.divider()
+
+    # These experiment graphs remain fixed while you view them.
+    left, right = st.columns(2)
+
+    with left:
+        render_muon_lifetime(initial_data)
+
+    with right:
+        render_absorption(initial_data)
+
+    st.divider()
+
+    # System information refreshes independently.
+    @st.fragment(run_every=timedelta(seconds=refresh_seconds))
+    def live_system_section() -> None:
+        data = get_data()
+        render_system(data)
+
+        st.caption(
+            f"Live sections refresh every {refresh_seconds} seconds."
+        )
+
+    live_system_section()
 st.divider()
 
 
