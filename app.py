@@ -247,31 +247,7 @@ def main() -> None:
         )
 
     live_system_section()
-st.divider()
 
-
-# These sections stay fixed and should no longer throw you
-# back to the top while you are viewing them.
-left, right = st.columns(2)
-
-with left:
-    render_muon_lifetime(initial_data)
-
-with right:
-    render_absorption(initial_data)
-
-st.divider()
-
-
-# System information can refresh separately
-@st.fragment(run_every=timedelta(seconds=refresh_seconds))
-def live_system_section() -> None:
-    data = get_current_data()
-    render_system(data)
-    st.caption(f"Refreshing every {refresh_seconds} seconds.")
-
-
-live_system_section()
 
 
 if __name__ == "__main__":
