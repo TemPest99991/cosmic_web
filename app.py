@@ -184,9 +184,9 @@ def render_shower(data: DashboardData) -> None:
 
     cols = st.columns(4)
     with cols[0]:
-        st.metric("2+ detector events", f"{shower_candidates:,}")
+        st.metric("2-detector events", f"{shower_candidates:,}")
     with cols[1]:
-        st.metric("3+ detector events", f"{high_confidence:,}")
+        st.metric("3-detector events", f"{high_confidence:,}")
     with cols[2]:
         st.metric("4-detector events", f"{four_fold:,}")
     with cols[3]:
