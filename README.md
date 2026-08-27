@@ -10,7 +10,7 @@ Detector computer or laptop
   -> dashboard data files
   -> Streamlit web app
   -> university display computer opens the public URL full-screen
-```
+```.
 
 ## What Is Included
 
